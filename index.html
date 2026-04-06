@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Quiz ICC PRO</title>
+<title>Quiz ICC </title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
@@ -64,64 +64,68 @@ const app=document.getElementById('app');
 
 function lobby(){
 app.innerHTML=`
-<div class="logo">Introducción a las Ciencias Computacionales</div>
-<input id="name" placeholder="Tu nombre"><br>
-<button class="btn" onclick="createRoom()">Crear sala</button><br>
-<input id="room" placeholder="Código">
-<button class="btn" onclick="joinRoom()">Unirse</button>
-`;
-}
+<div style="
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+height:100vh;
+">
 
-function createRoom(){
-name=document.getElementById('name').value;
-room=Math.floor(1000+Math.random()*9000).toString();
-isHost=true;
+<div style="
+font-size:36px;
+font-weight:bold;
+margin-bottom:20px;
+">
+Introducción a las Ciencias Computacionales
+</div>
 
-db.ref('rooms/'+room).set({q:0,time:15,players:{}});
-joinRoom();
-}
+<div style="
+background:#2a1a5e;
+padding:30px;
+border-radius:20px;
+box-shadow:0 0 20px rgba(0,0,0,0.5);
+width:300px;
+">
 
-function joinRoom(){
-name=document.getElementById('name').value;
-room=document.getElementById('room').value || room;
+<input id="name" placeholder="Tu nombre" style="
+width:100%;
+padding:12px;
+margin-bottom:15px;
+border-radius:10px;
+border:none;
+font-size:16px;
+">
 
-db.ref('rooms/'+room+'/players/'+name).set({score:0});
+<button class="btn" onclick="createRoom()" style="
+width:100%;
+margin-bottom:10px;
+font-size:16px;
+">
+Crear sala
+</button>
 
-listenRoom();
-}
+<input id="room" placeholder="Código de sala" style="
+width:100%;
+padding:12px;
+margin:10px 0;
+border-radius:10px;
+border:none;
+font-size:16px;
+">
 
-function listenRoom(){
-db.ref('rooms/'+room).on('value',snap=>{
-let data=snap.val();
-if(!data) return;
+<button class="btn" onclick="joinRoom()" style="
+width:100%;
+font-size:16px;
+">
+Unirse
+</button>
 
-if(data.q>=QS.length){
-showResults(data.players);
-}else{
-showQ(data);
-}
-});
-}
-
-function showQ(data){
-answered=false;
-let q=QS[data.q];
-
-app.innerHTML=`
-<div class="fade">
-<div class="logo">Sala ${room}</div>
-<div class="timer">Tiempo: ${data.time}</div>
-<img src="${q.img}">
-<h2>${q.q}</h2>
-
-${q.opts.map((o,i)=>`
-<button class="opt opt${i}" onclick="answer(${i})" id="o${i}">
-${o}
-</button>`).join('')}
+</div>
 
 </div>
 `;
-
+}
 startTimer();
 }
 
