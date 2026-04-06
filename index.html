@@ -111,7 +111,59 @@ app.innerHTML = `
 </div>
 `;
 }
+function createRoom(){
+name=document.getElementById('name').value;
+room=Math.floor(1000+Math.random()*9000).toString();
+isHost=true;
 
+db.ref('rooms/'+room).set({
+  q:0,
+  players:{}
+});
+
+joinRoom();
+}
+
+function joinRoom(){
+name=document.getElementById('name').value;
+room=document.getElementById('room').value || room;
+
+db.ref('rooms/'+room+'/players/'+name).set({score:0});
+
+listenRoom();
+}
+
+function listenRoom(){
+db.ref('rooms/'+room).on('value',snap=>{
+let data=snap.val();
+if(!data) return;
+
+if(data.q>=QS.length){
+showResults(data.players);
+}else{
+showQ(data);
+}
+});
+}
+
+function showQ(data){
+answered=false;
+let q=QS[data.q];
+
+app.innerHTML=`
+<h1>Sala ${room}</h1>
+<div class="timer">Tiempo: 15</div>
+<img src="${q.img}">
+<h2>${q.q}</h2>
+
+${q.opts.map((o,i)=>`
+<button class="opt opt${i}" onclick="answer(${i})" id="o${i}">
+${o}
+</button>`).join('')}
+`;
+
+startTimer();
+}
 
 function startTimer(){
 let t=15;
