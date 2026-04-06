@@ -81,65 +81,32 @@ let room="", name="", isHost=false, answered=false;
 const app=document.getElementById('app');
 
 function lobby(){
-app.innerHTML=`
-<div style="
-display:flex;
-flex-direction:column;
-justify-content:center;
-align-items:center;
-height:100vh;
-">
+app.innerHTML = `
+<div style="display:flex;justify-content:center;align-items:center;height:100vh;">
 
-<div style="
-font-size:36px;
-font-weight:bold;
-margin-bottom:20px;
-">
-Introducción a las Ciencias Computacionales
-</div>
+  <div style="text-align:center;">
+  
+    <h1 style="font-size:36px;margin-bottom:20px;">
+    Introducción a las Ciencias Computacionales
+    </h1>
 
-<div style="
-background:#2a1a5e;
-padding:30px;
-border-radius:20px;
-box-shadow:0 0 20px rgba(0,0,0,0.5);
-width:300px;
-">
+    <div style="background:#2a1a5e;padding:30px;border-radius:20px;width:300px;">
+      
+      <input id="name" placeholder="Tu nombre" style="width:100%;padding:12px;margin-bottom:15px;border-radius:10px;border:none;">
+      
+      <button class="btn" onclick="createRoom()" style="width:100%;margin-bottom:10px;">
+      Crear sala
+      </button>
 
-<input id="name" placeholder="Tu nombre" style="
-width:100%;
-padding:12px;
-margin-bottom:15px;
-border-radius:10px;
-border:none;
-font-size:16px;
-">
+      <input id="room" placeholder="Código de sala" style="width:100%;padding:12px;margin:10px 0;border-radius:10px;border:none;">
+      
+      <button class="btn" onclick="joinRoom()" style="width:100%;">
+      Unirse
+      </button>
 
-<button class="btn" onclick="createRoom()" style="
-width:100%;
-margin-bottom:10px;
-font-size:16px;
-">
-Crear sala
-</button>
+    </div>
 
-<input id="room" placeholder="Código de sala" style="
-width:100%;
-padding:12px;
-margin:10px 0;
-border-radius:10px;
-border:none;
-font-size:16px;
-">
-
-<button class="btn" onclick="joinRoom()" style="
-width:100%;
-font-size:16px;
-">
-Unirse
-</button>
-
-</div>
+  </div>
 
 </div>
 `;
