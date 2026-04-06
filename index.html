@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Quiz ICC </title>
+<title>Quiz ICC</title>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
@@ -13,6 +13,7 @@ body{
   background: linear-gradient(135deg,#1a0e3d,#3b1f7a);
   color:white;
   margin:0;
+  text-align:center;
 }
 
 .btn{
@@ -22,15 +23,19 @@ body{
   border-radius:10px;
   font-weight:bold;
   cursor:pointer;
-  transition:0.2s;
 }
 
-.btn:hover{
-  transform:scale(1.05);
-  background:#ffd84d;
+.opt{
+  display:inline-block;
+  width:45%;
+  margin:10px;
+  padding:20px;
+  border:none;
+  border-radius:12px;
+  font-weight:bold;
+  cursor:pointer;
 }
 
-.opt{display:inline-block;width:45%;margin:10px;padding:20px;border:none;border-radius:12px;font-weight:bold;font-size:16px;cursor:pointer}
 .opt0{background:#e84040}
 .opt1{background:#1468c8}
 .opt2{background:#1aaa6e}
@@ -41,9 +46,6 @@ body{
 
 .timer{font-size:22px;margin:10px}
 img{width:200px;margin:10px;border-radius:10px}
-
-.fade{animation:fade 0.3s}
-@keyframes fade{from{opacity:0}to{opacity:1}}
 </style>
 </head>
 
@@ -83,34 +85,23 @@ const app=document.getElementById('app');
 function lobby(){
 app.innerHTML = `
 <div style="display:flex;justify-content:center;align-items:center;height:100vh;">
+<div>
 
-  <div style="text-align:center;">
-  
-    <h1 style="font-size:36px;margin-bottom:20px;">
-    Introducción a las Ciencias Computacionales
-    </h1>
+<h1>Introducción a las Ciencias Computacionales</h1>
 
-    <div style="background:#2a1a5e;padding:30px;border-radius:20px;width:300px;">
-      
-      <input id="name" placeholder="Tu nombre" style="width:100%;padding:12px;margin-bottom:15px;border-radius:10px;border:none;">
-      
-      <button class="btn" onclick="createRoom()" style="width:100%;margin-bottom:10px;">
-      Crear sala
-      </button>
+<div style="background:#2a1a5e;padding:30px;border-radius:20px;width:300px;">
+<input id="name" placeholder="Tu nombre" style="width:100%;padding:10px;margin-bottom:10px;">
+<button class="btn" onclick="createRoom()" style="width:100%;">Crear sala</button>
 
-      <input id="room" placeholder="Código de sala" style="width:100%;padding:12px;margin:10px 0;border-radius:10px;border:none;">
-      
-      <button class="btn" onclick="joinRoom()" style="width:100%;">
-      Unirse
-      </button>
+<input id="room" placeholder="Código" style="width:100%;padding:10px;margin:10px 0;">
+<button class="btn" onclick="joinRoom()" style="width:100%;">Unirse</button>
+</div>
 
-    </div>
-
-  </div>
-
+</div>
 </div>
 `;
 }
+
 function createRoom(){
 name=document.getElementById('name').value;
 room=Math.floor(1000+Math.random()*9000).toString();
@@ -151,10 +142,10 @@ answered=false;
 let q=QS[data.q];
 
 app.innerHTML=`
-<h1>Sala ${room}</h1>
+<h2>Sala ${room}</h2>
 <div class="timer">Tiempo: 15</div>
 <img src="${q.img}">
-<h2>${q.q}</h2>
+<h3>${q.q}</h3>
 
 ${q.opts.map((o,i)=>`
 <button class="opt opt${i}" onclick="answer(${i})" id="o${i}">
@@ -167,9 +158,13 @@ startTimer();
 
 function startTimer(){
 let t=15;
+
+let timerElement=document.querySelector('.timer');
+if(!timerElement) return;
+
 let interval=setInterval(()=>{
 t--;
-document.querySelector('.timer').innerText="Tiempo: "+t;
+timerElement.innerText="Tiempo: "+t;
 
 if(t<=0){
 clearInterval(interval);
