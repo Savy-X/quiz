@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz UAdeC</title>
+
+<!-- Firebase compat (IMPORTANTE) -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+<style>
+body{
+  font-family: Arial;
+  background:#1a0e3d;
+  color:white;
+  text-align:center;
+}
+.school-logo{
+  width:90px;
+  margin:10px auto;
+}
+.btn{
+  background:#f5c842;
+  border:none;
+  padding:10px 20px;
+  border-radius:20px;
+  font-weight:bold;
+  margin:5px;
+  cursor:pointer;
+}
+.input{
+  padding:10px;
+  border-radius:10px;
+  border:none;
+  margin:5px;
+}
+.opt{
+  display:block;
+  margin:5px auto;
+  padding:10px;
+  border-radius:10px;
+  border:none;
+  width:80%;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+<div id="app"></div>
+
+<script>
+// 🔥 TU CONFIG YA PUESTA
+const firebaseConfig = {
+  apiKey: "AIzaSyCw6dFeA209MD3oaoW5R_mN__537fL2AwA",
+  authDomain: "quiz-icc.firebaseapp.com",
+  databaseURL: "https://quiz-icc-default-rtdb.firebaseio.com",
+  projectId: "quiz-icc",
+  storageBucket: "quiz-icc.firebasestorage.app",
+  messagingSenderId: "602781207157",
+  appId: "1:602781207157:web:128e05874f221b27de863c",
+  measurementId: "G-3KP1WGLZ4K"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// preguntas
+const QS = [
+  { q:"¿Qué es un algoritmo?", opts:["Lenguaje","Pasos","Hardware","SO"], ans:1 },
+  { q:"Base binaria", opts:["0-1","1","0-1-2","ABC"], ans:0 }
+];
+
+let room="", name="", qIndex=0;
+
+const app=document.getElementById('app');
+
+// pantalla inicial
+function lobby(){
+app.innerHTML=`
+<img src="uadec.png" class="school-logo">
+<h1>Quiz UAdeC</h1>
+
+<input class="input" id="name" placeholder="Tu nombre">
+
+<br>
+
+<button class="btn" onclick="createRoom()">Crear sala</button>
+
+<br>
+
+<input class="input" id="room" placeholder="Código">
+<button class="btn" onclick="joinRoom()">Unirse</button>
+`;
+}
+
+// crear sala
+function createRoom(){
+name=document.getElementById('name').value;
+room=Math.floor(1000+Math.random()*9000).toString();
+
+db.ref('rooms/'+room).set({
+  host:name,
+  q:0,
+  players:{}
+});
+
+joinRoom();
+}
+
+// unirse
+function joinRoom(){
+name=document.getElementById('name').value;
+room=document.getElementById('room').value || room;
+
+db.ref('rooms/'+room+'/players/'+name).set({score:0});
+
+listenRoom();
+}
+
+// escuchar cambios
+function listenRoom(){
+app.innerHTML=`<h2>Sala: ${room}</h2><p>Esperando...</p>`;
+
+db.ref('rooms/'+room).on('value',snap=>{
+  let data=snap.val();
+  if(!data) return;
+
+  qIndex=data.q;
+  showQ();
+});
+}
+
+// mostrar pregunta
+function showQ(){
+if(qIndex>=QS.length){
+  end();
+  return;
+}
+
+let q=QS[qIndex];
+
+app.innerHTML=`
+<img src="uadec.png" class="school-logo">
+<h2>${q.q}</h2>
+${q.opts.map((o,i)=>`<button class="opt" onclick="answer(${i})">${o}</button>`).join('')}
+`;
+}
+
+// responder
+function answer(i){
+let correct = i===QS[qIndex].ans;
+
+if(correct){
+ db.ref('rooms/'+room+'/players/'+name+'/score')
+   .transaction(s=> (s||0)+1);
+}
+
+// avanzar pregunta
+db.ref('rooms/'+room+'/q').transaction(q=> (q||0)+1);
+}
+
+// final
+function end(){
+db.ref('rooms/'+room+'/players').once('value',snap=>{
+  let players=snap.val();
+
+  let html=`<h1>Resultados</h1>`;
+
+  for(let p in players){
+    html+=`<p>${p}: ${players[p].score}</p>`;
+  }
+
+  html+=`<button class="btn" onclick="lobby()">Reiniciar</button>`;
+
+  app.innerHTML=html;
+});
+}
+
+lobby();
+</script>
+
+</body>
+</html>
