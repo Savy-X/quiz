@@ -4,11 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Quiz ICC — Multijugador</title>
-
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;900&family=Nunito+Sans:wght@400;600&display=swap" rel="stylesheet">
-
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -54,17 +52,18 @@ body { font-family:'Nunito Sans',sans-serif; background:var(--bg); min-height:10
 .timer-bar-bg { flex:1; height:8px; background:rgba(255,255,255,0.12); border-radius:99px; overflow:hidden; }
 .timer-bar { height:8px; background:var(--gold); border-radius:99px; transition:width 0.1s linear,background 0.4s; }
 .q-card { background:var(--glass); border:1px solid var(--glass-b); border-radius:16px; padding:1.5rem; text-align:center; margin-bottom:1.25rem; }
-.q-img { width:200px; height:140px; object-fit:contain; border-radius:12px; margin-bottom:1rem; border:2px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); padding:6px; }
+.q-img-wrap { width:200px; height:140px; margin:0 auto 1rem; border-radius:12px; border:2px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.07); display:flex; align-items:center; justify-content:center; overflow:hidden; padding:8px; }
+.q-img-wrap svg { width:100%; height:100%; }
 .q-text { font-family:'Nunito',sans-serif; font-weight:900; font-size:1.2rem; line-height:1.4; }
 .options-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:1rem; }
 .opt-btn { border:none; border-radius:12px; padding:1rem 0.75rem; cursor:pointer; display:flex; align-items:center; gap:10px; text-align:left; min-height:74px; font-family:'Nunito Sans',sans-serif; font-weight:600; font-size:0.9rem; color:#fff; transition:transform 0.12s,opacity 0.2s; }
 .opt-btn:hover:not(:disabled) { transform:scale(1.03); }
 .opt-btn:active:not(:disabled) { transform:scale(0.97); }
 .opt-btn:disabled { cursor:default; }
-.opt-0 { background:var(--red);    box-shadow:0 4px 0 var(--red-d); }
-.opt-1 { background:var(--blue);   box-shadow:0 4px 0 var(--blue-d); }
-.opt-2 { background:var(--green);  box-shadow:0 4px 0 var(--green-d); }
-.opt-3 { background:var(--orange); box-shadow:0 4px 0 var(--orange-d); }
+.opt-0{background:var(--red);box-shadow:0 4px 0 var(--red-d);}
+.opt-1{background:var(--blue);box-shadow:0 4px 0 var(--blue-d);}
+.opt-2{background:var(--green);box-shadow:0 4px 0 var(--green-d);}
+.opt-3{background:var(--orange);box-shadow:0 4px 0 var(--orange-d);}
 .opt-icon { width:30px; height:30px; border-radius:7px; background:rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
 .opt-label { flex:1; line-height:1.3; }
 .opt-btn.dim { opacity:0.28; transform:scale(0.97)!important; box-shadow:none; }
@@ -81,12 +80,12 @@ body { font-family:'Nunito Sans',sans-serif; background:var(--bg); min-height:10
 .podium-name { font-family:'Nunito',sans-serif; font-weight:900; font-size:0.78rem; max-width:80px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .podium-score { font-size:0.68rem; color:rgba(255,255,255,0.45); }
 .podium-block { width:70px; border-radius:8px 8px 0 0; display:flex; align-items:center; justify-content:center; font-size:1.4rem; }
-.p1{background:var(--gold);height:88px;} .p2{background:#c0c0c0;height:62px;} .p3{background:#cd7f32;height:46px;}
+.p1{background:var(--gold);height:88px;}.p2{background:#c0c0c0;height:62px;}.p3{background:#cd7f32;height:46px;}
 .lb-list { display:flex; flex-direction:column; gap:8px; margin-bottom:1.5rem; }
 .lb-row { display:flex; align-items:center; gap:12px; background:var(--glass); border:1px solid var(--glass-b); border-radius:12px; padding:0.8rem 1rem; animation:fadeUp 0.3s ease both; }
 .lb-row.hl { background:rgba(245,200,66,0.14); border-color:rgba(245,200,66,0.4); }
 .lb-rank { font-family:'Nunito',sans-serif; font-weight:900; font-size:1.2rem; min-width:34px; text-align:center; }
-.lb-rank.gold{color:var(--gold);} .lb-rank.silver{color:#c0c0c0;} .lb-rank.bronze{color:#cd7f32;} .lb-rank.norm{color:rgba(255,255,255,0.35);font-size:0.9rem;}
+.lb-rank.gold{color:var(--gold);}.lb-rank.silver{color:#c0c0c0;}.lb-rank.bronze{color:#cd7f32;}.lb-rank.norm{color:rgba(255,255,255,0.35);font-size:0.9rem;}
 .lb-name { flex:1; font-family:'Nunito',sans-serif; font-weight:700; font-size:0.95rem; }
 .lb-you { font-size:0.65rem; color:var(--gold); margin-left:5px; }
 .lb-bar-wrap { flex:2; height:7px; background:rgba(255,255,255,0.1); border-radius:99px; overflow:hidden; }
@@ -107,14 +106,144 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+const IMGS = {
+  red: `<svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+    <rect width="200" height="140" fill="#0f0a2e"/>
+    <rect x="80" y="55" width="40" height="30" rx="4" fill="#3b2fa0" stroke="#f5c842" stroke-width="2"/>
+    <rect x="84" y="59" width="32" height="4" rx="2" fill="#f5c842" opacity=".7"/>
+    <rect x="84" y="65" width="32" height="4" rx="2" fill="#f5c842" opacity=".5"/>
+    <rect x="84" y="71" width="32" height="4" rx="2" fill="#f5c842" opacity=".3"/>
+    <rect x="15" y="15" width="28" height="20" rx="3" fill="#1468c8" stroke="#7b9ef5" stroke-width="1.5"/>
+    <rect x="22" y="35" width="14" height="4" rx="1" fill="#7b9ef5"/>
+    <rect x="157" y="15" width="28" height="20" rx="3" fill="#1468c8" stroke="#7b9ef5" stroke-width="1.5"/>
+    <rect x="164" y="35" width="14" height="4" rx="1" fill="#7b9ef5"/>
+    <rect x="15" y="105" width="28" height="20" rx="3" fill="#1468c8" stroke="#7b9ef5" stroke-width="1.5"/>
+    <rect x="22" y="125" width="14" height="4" rx="1" fill="#7b9ef5"/>
+    <rect x="157" y="105" width="28" height="20" rx="3" fill="#1468c8" stroke="#7b9ef5" stroke-width="1.5"/>
+    <rect x="164" y="125" width="14" height="4" rx="1" fill="#7b9ef5"/>
+    <line x1="43" y1="25" x2="80" y2="65" stroke="#f5c842" stroke-width="1.5" stroke-dasharray="4,3" opacity=".8"/>
+    <line x1="157" y1="25" x2="120" y2="65" stroke="#f5c842" stroke-width="1.5" stroke-dasharray="4,3" opacity=".8"/>
+    <line x1="43" y1="115" x2="80" y2="75" stroke="#f5c842" stroke-width="1.5" stroke-dasharray="4,3" opacity=".8"/>
+    <line x1="157" y1="115" x2="120" y2="75" stroke="#f5c842" stroke-width="1.5" stroke-dasharray="4,3" opacity=".8"/>
+    <text x="100" y="133" text-anchor="middle" font-size="9" fill="#f5c842" font-family="Arial">Red Informática</text>
+  </svg>`,
+
+  utp: `<svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+    <rect width="200" height="140" fill="#0f0a2e"/>
+    <rect x="10" y="60" width="180" height="20" rx="10" fill="#e07b10"/>
+    <path d="M20 70 Q30 60 40 70 Q50 80 60 70 Q70 60 80 70 Q90 80 100 70 Q110 60 120 70 Q130 80 140 70 Q150 60 160 70 Q170 80 180 70" stroke="#e84040" stroke-width="3" fill="none"/>
+    <path d="M20 72 Q30 82 40 72 Q50 62 60 72 Q70 82 80 72 Q90 62 100 72 Q110 82 120 72 Q130 62 140 72 Q150 82 160 72 Q170 62 180 72" stroke="#1468c8" stroke-width="3" fill="none"/>
+    <rect x="2" y="55" width="18" height="30" rx="3" fill="#aaa" stroke="#fff" stroke-width="1"/>
+    <rect x="5" y="75" width="12" height="6" rx="1" fill="#555"/>
+    <rect x="180" y="55" width="18" height="30" rx="3" fill="#aaa" stroke="#fff" stroke-width="1"/>
+    <rect x="183" y="75" width="12" height="6" rx="1" fill="#555"/>
+    <rect x="60" y="90" width="80" height="22" rx="4" fill="rgba(255,255,255,0.1)" stroke="#f5c842" stroke-width="1"/>
+    <text x="100" y="105" text-anchor="middle" font-size="10" fill="#f5c842" font-family="Arial" font-weight="bold">Cable UTP</text>
+    <text x="100" y="128" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.5)" font-family="Arial">Par Trenzado sin Apantallar</text>
+  </svg>`,
+
+  lan: `<svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+    <rect width="200" height="140" fill="#0f0a2e"/>
+    <rect x="70" y="50" width="60" height="55" rx="3" fill="#1a0e3d" stroke="#1468c8" stroke-width="2"/>
+    <polygon points="100,25 65,52 135,52" fill="#1468c8" opacity=".8"/>
+    <rect x="82" y="72" width="36" height="16" rx="3" fill="#3b2fa0" stroke="#f5c842" stroke-width="1.5"/>
+    <circle cx="89" cy="80" r="2.5" fill="#1aaa6e"/>
+    <circle cx="97" cy="80" r="2.5" fill="#1aaa6e"/>
+    <circle cx="105" cy="80" r="2.5" fill="#f5c842"/>
+    <circle cx="113" cy="80" r="2.5" fill="#1aaa6e"/>
+    <rect x="20" y="90" width="24" height="18" rx="2" fill="#1468c8" stroke="#7b9ef5" stroke-width="1"/>
+    <rect x="26" y="108" width="12" height="3" rx="1" fill="#7b9ef5"/>
+    <rect x="156" y="90" width="24" height="18" rx="2" fill="#1468c8" stroke="#7b9ef5" stroke-width="1"/>
+    <rect x="162" y="108" width="12" height="3" rx="1" fill="#7b9ef5"/>
+    <line x1="44" y1="99" x2="82" y2="82" stroke="#f5c842" stroke-width="1.5" stroke-dasharray="3,2"/>
+    <line x1="156" y1="99" x2="118" y2="82" stroke="#f5c842" stroke-width="1.5" stroke-dasharray="3,2"/>
+    <text x="100" y="130" text-anchor="middle" font-size="10" fill="#f5c842" font-family="Arial" font-weight="bold">LAN — Red de Área Local</text>
+  </svg>`,
+
+  wlan: `<svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+    <rect width="200" height="140" fill="#0f0a2e"/>
+    <rect x="75" y="85" width="50" height="22" rx="5" fill="#3b2fa0" stroke="#f5c842" stroke-width="2"/>
+    <line x1="88" y1="85" x2="85" y2="70" stroke="#f5c842" stroke-width="2"/>
+    <line x1="112" y1="85" x2="115" y2="70" stroke="#f5c842" stroke-width="2"/>
+    <circle cx="93" cy="93" r="2.5" fill="#1aaa6e"/>
+    <circle cx="100" cy="93" r="2.5" fill="#1aaa6e"/>
+    <circle cx="107" cy="93" r="2.5" fill="#f5c842"/>
+    <path d="M70 75 Q100 55 130 75" stroke="#f5c842" stroke-width="2.5" fill="none" opacity=".9"/>
+    <path d="M58 63 Q100 38 142 63" stroke="#f5c842" stroke-width="2" fill="none" opacity=".6"/>
+    <path d="M46 51 Q100 20 154 51" stroke="#f5c842" stroke-width="1.5" fill="none" opacity=".35"/>
+    <circle cx="100" cy="82" r="4" fill="#f5c842"/>
+    <rect x="18" y="95" width="22" height="30" rx="3" fill="#1468c8" stroke="#7b9ef5" stroke-width="1.2"/>
+    <rect x="21" y="98" width="16" height="20" rx="1" fill="#0d4a96"/>
+    <rect x="160" y="95" width="22" height="30" rx="3" fill="#1468c8" stroke="#7b9ef5" stroke-width="1.2"/>
+    <rect x="163" y="98" width="16" height="20" rx="1" fill="#0d4a96"/>
+    <text x="100" y="133" text-anchor="middle" font-size="10" fill="#f5c842" font-family="Arial" font-weight="bold">WLAN — Red Inalámbrica</text>
+  </svg>`,
+
+  wan: `<svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+    <rect width="200" height="140" fill="#0f0a2e"/>
+    <circle cx="100" cy="68" r="48" fill="#0d2a5e" stroke="#1468c8" stroke-width="2"/>
+    <ellipse cx="100" cy="68" rx="24" ry="48" fill="none" stroke="#1468c8" stroke-width="1" opacity=".5"/>
+    <ellipse cx="100" cy="68" rx="42" ry="48" fill="none" stroke="#1468c8" stroke-width="1" opacity=".3"/>
+    <line x1="52" y1="68" x2="148" y2="68" stroke="#1468c8" stroke-width="1" opacity=".5"/>
+    <ellipse cx="100" cy="52" rx="44" ry="12" fill="none" stroke="#1468c8" stroke-width="1" opacity=".4"/>
+    <ellipse cx="100" cy="84" rx="44" ry="12" fill="none" stroke="#1468c8" stroke-width="1" opacity=".4"/>
+    <circle cx="68" cy="55" r="4" fill="#f5c842"/>
+    <circle cx="130" cy="50" r="4" fill="#f5c842"/>
+    <circle cx="80" cy="82" r="4" fill="#f5c842"/>
+    <circle cx="122" cy="78" r="4" fill="#f5c842"/>
+    <line x1="68" y1="55" x2="130" y2="50" stroke="#f5c842" stroke-width="1.5" stroke-dasharray="4,2" opacity=".8"/>
+    <line x1="68" y1="55" x2="80" y2="82" stroke="#f5c842" stroke-width="1.5" stroke-dasharray="4,2" opacity=".8"/>
+    <line x1="130" y1="50" x2="122" y2="78" stroke="#f5c842" stroke-width="1.5" stroke-dasharray="4,2" opacity=".8"/>
+    <line x1="80" y1="82" x2="122" y2="78" stroke="#f5c842" stroke-width="1.5" stroke-dasharray="4,2" opacity=".8"/>
+    <text x="100" y="132" text-anchor="middle" font-size="10" fill="#f5c842" font-family="Arial" font-weight="bold">WAN — Red de Área Amplia</text>
+  </svg>`,
+
+  sandwich: `<svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+    <rect width="200" height="140" fill="#0f0a2e"/>
+    <ellipse cx="100" cy="42" rx="70" ry="18" fill="#c8882a"/>
+    <ellipse cx="100" cy="38" rx="70" ry="14" fill="#e8a84a"/>
+    <ellipse cx="100" cy="58" rx="72" ry="10" fill="#1aaa6e" opacity=".9"/>
+    <ellipse cx="100" cy="68" rx="68" ry="9" fill="#e84040" opacity=".9"/>
+    <ellipse cx="100" cy="77" rx="70" ry="8" fill="#f5c842" opacity=".9"/>
+    <ellipse cx="100" cy="86" rx="68" ry="8" fill="#e07b10" opacity=".8"/>
+    <ellipse cx="100" cy="98" rx="70" ry="12" fill="#c8882a"/>
+    <ellipse cx="100" cy="96" rx="70" ry="10" fill="#d4963a"/>
+    <text x="14" y="42" font-size="9" fill="#f5c842" font-family="Arial" font-weight="bold">1</text>
+    <text x="14" y="68" font-size="9" fill="#f5c842" font-family="Arial" font-weight="bold">2</text>
+    <text x="14" y="90" font-size="9" fill="#f5c842" font-family="Arial" font-weight="bold">3</text>
+    <text x="100" y="122" text-anchor="middle" font-size="9" fill="#f5c842" font-family="Arial" font-weight="bold">Pasos del Algoritmo</text>
+    <text x="100" y="133" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.4)" font-family="Arial">Pan → Ingredientes → Cerrar → Comer</text>
+  </svg>`,
+
+  algoritmo: `<svg viewBox="0 0 200 140" xmlns="http://www.w3.org/2000/svg">
+    <rect width="200" height="140" fill="#0f0a2e"/>
+    <ellipse cx="100" cy="18" rx="35" ry="12" fill="#1aaa6e" stroke="#fff" stroke-width="1.5"/>
+    <text x="100" y="22" text-anchor="middle" font-size="10" fill="#fff" font-family="Arial" font-weight="bold">INICIO</text>
+    <line x1="100" y1="30" x2="100" y2="42" stroke="#f5c842" stroke-width="2"/>
+    <polygon points="96,42 104,42 100,48" fill="#f5c842"/>
+    <rect x="60" y="48" width="80" height="22" rx="3" fill="#1468c8" stroke="#7b9ef5" stroke-width="1.5"/>
+    <text x="100" y="63" text-anchor="middle" font-size="9" fill="#fff" font-family="Arial">Ejecutar pasos</text>
+    <line x1="100" y1="70" x2="100" y2="82" stroke="#f5c842" stroke-width="2"/>
+    <polygon points="96,82 104,82 100,88" fill="#f5c842"/>
+    <polygon points="100,88 140,104 100,120 60,104" fill="#e07b10" stroke="#fff" stroke-width="1.5"/>
+    <text x="100" y="107" text-anchor="middle" font-size="8" fill="#fff" font-family="Arial">¿Terminó?</text>
+    <line x1="140" y1="104" x2="165" y2="104" stroke="#1aaa6e" stroke-width="2"/>
+    <text x="168" y="108" font-size="9" fill="#1aaa6e" font-family="Arial" font-weight="bold">SÍ</text>
+    <line x1="100" y1="120" x2="100" y2="132" stroke="#e84040" stroke-width="2"/>
+    <text x="104" y="132" font-size="9" fill="#e84040" font-family="Arial" font-weight="bold">NO</text>
+    <text x="14" y="108" font-size="8" fill="rgba(255,255,255,0.4)" font-family="Arial">Inicio y fin</text>
+    <text x="14" y="118" font-size="8" fill="rgba(255,255,255,0.4)" font-family="Arial">definidos</text>
+  </svg>`
+};
+
 const QS = [
-  { q:"¿Qué es una red informática?", img:"https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Network_switch_and_cable.jpg/320px-Network_switch_and_cable.jpg", opts:["Un solo equipo conectado a internet","Un conjunto de dispositivos conectados para compartir recursos","Un programa para navegar en internet","Un tipo de cable de datos"], ans:1, exp:"Una red informática es un conjunto de dispositivos conectados entre sí para compartir recursos, información y servicios." },
-  { q:"¿Cuál de estos es un tipo de cable usado en redes?", img:"https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/UTP_cable.jpg/320px-UTP_cable.jpg", opts:["Cable HDMI","Cable USB","Cable de par trenzado (UTP)","Cable de audio"], ans:2, exp:"El cable UTP (Par Trenzado sin Apantallar) es el más usado en redes de área local (LAN) por su bajo costo y facilidad de instalación." },
-  { q:"¿Qué tipo de red cubre un área pequeña como una casa o salón de clases?", img:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Lan_Wiki.png/320px-Lan_Wiki.png", opts:["WAN","WLAN","LAN","Internet"], ans:2, exp:"LAN (Local Area Network) es una red de área local que cubre espacios pequeños como una casa, oficina o salón de clases." },
-  { q:"¿Qué tipo de red permite conectar dispositivos de forma inalámbrica?", img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Wifi_icon.svg/240px-Wifi_icon.svg.png", opts:["LAN","WAN","WLAN","Cable UTP"], ans:2, exp:"WLAN (Wireless Local Area Network) es una red de área local inalámbrica. El Wi-Fi es el ejemplo más común." },
-  { q:"¿Qué tipo de red conecta países o continentes?", img:"https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Internet_map_1024.jpg/320px-Internet_map_1024.jpg", opts:["LAN","WLAN","Intranet","WAN"], ans:3, exp:"WAN (Wide Area Network) es una red de área amplia que puede conectar ciudades, países e incluso continentes. Internet es el ejemplo más grande de WAN." },
-  { q:"¿Cuál es el orden correcto de pasos de un algoritmo para hacer un sándwich?", img:"https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Good_Food_Display_-_NCI_Visuals_Online.jpg/320px-Good_Food_Display_-_NCI_Visuals_Online.jpg", opts:["Comer, untar, agarrar pan","Agarrar pan, untar ingredientes, cerrar y comer","Cerrar, agarrar pan, untar","Untar, comer, agarrar pan"], ans:1, exp:"Un algoritmo debe tener pasos ordenados y lógicos. El orden correcto es: agarrar el pan → untar ingredientes → cerrar → comer." },
-  { q:"¿Cuál es una característica obligatoria de todo algoritmo?", img:"https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Simple_algorithm_flow_chart.png/240px-Simple_algorithm_flow_chart.png", opts:["Debe estar escrito en Python","Debe tener imágenes","Debe tener un inicio y un fin definidos","Debe ejecutarse en una computadora"], ans:2, exp:"Todo algoritmo debe tener un inicio y un fin claramente definidos, además de ser finito, preciso y ordenado." }
+  { q:"¿Qué es una red informática?", img:"red", opts:["Un solo equipo conectado a internet","Un conjunto de dispositivos conectados para compartir recursos","Un programa para navegar en internet","Un tipo de cable de datos"], ans:1, exp:"Una red informática es un conjunto de dispositivos conectados entre sí para compartir recursos, información y servicios." },
+  { q:"¿Cuál de estos es un tipo de cable usado en redes?", img:"utp", opts:["Cable HDMI","Cable USB","Cable de par trenzado (UTP)","Cable de audio"], ans:2, exp:"El cable UTP (Par Trenzado sin Apantallar) es el más usado en redes de área local por su bajo costo y facilidad de instalación." },
+  { q:"¿Qué tipo de red cubre un área pequeña como una casa o salón de clases?", img:"lan", opts:["WAN","WLAN","LAN","Internet"], ans:2, exp:"LAN (Local Area Network) es una red de área local que cubre espacios pequeños como una casa, oficina o salón de clases." },
+  { q:"¿Qué tipo de red permite conectar dispositivos de forma inalámbrica?", img:"wlan", opts:["LAN","WAN","WLAN","Cable UTP"], ans:2, exp:"WLAN (Wireless Local Area Network) es una red inalámbrica. El Wi-Fi es el ejemplo más común." },
+  { q:"¿Qué tipo de red conecta países o continentes?", img:"wan", opts:["LAN","WLAN","Intranet","WAN"], ans:3, exp:"WAN (Wide Area Network) conecta ciudades, países e incluso continentes. Internet es el ejemplo más grande de WAN." },
+  { q:"¿Cuál es el orden correcto de pasos de un algoritmo para hacer un sándwich?", img:"sandwich", opts:["Comer, untar, agarrar pan","Agarrar pan, untar ingredientes, cerrar y comer","Cerrar, agarrar pan, untar","Untar, comer, agarrar pan"], ans:1, exp:"Un algoritmo tiene pasos ordenados. El orden correcto es: agarrar pan → untar ingredientes → cerrar → comer." },
+  { q:"¿Cuál es una característica obligatoria de todo algoritmo?", img:"algoritmo", opts:["Debe estar escrito en Python","Debe tener imágenes","Debe tener un inicio y un fin definidos","Debe ejecutarse en una computadora"], ans:2, exp:"Todo algoritmo debe tener un inicio y un fin claramente definidos, además de ser finito, preciso y ordenado." }
 ];
 
 const ICONS=["◆","■","▲","●"], TIME=20;
@@ -140,7 +269,7 @@ function lobby(){
 }
 
 function syncBtns(){
-  const n=document.getElementById('nameI').value.trim(), r=document.getElementById('roomI').value.trim();
+  const n=document.getElementById('nameI').value.trim(),r=document.getElementById('roomI').value.trim();
   document.getElementById('createBtn').disabled=n.length<2;
   document.getElementById('joinBtn').disabled=n.length<2||r.length<4;
 }
@@ -216,7 +345,7 @@ function renderQuestion(data){
       <div class="timer-bar-bg"><div class="timer-bar" id="tb" style="width:100%"></div></div>
     </div>
     <div class="q-card">
-      ${q.img?`<img class="q-img" src="${q.img}" alt="imagen de la pregunta">`:''}
+      <div class="q-img-wrap">${IMGS[q.img]||''}</div>
       <div class="q-text">${q.q}</div>
     </div>
     <div class="options-grid">
@@ -236,7 +365,7 @@ function renderQuestion(data){
 function answer(i){
   if(answered)return; answered=true; clearInterval(timerID);
   db.ref('rooms/'+room).once('value').then(snap=>{
-    const data=snap.val(), q=QS[data.q], correct=i===q.ans, pts=correct?100:0;
+    const data=snap.val(),q=QS[data.q],correct=i===q.ans,pts=correct?100:0;
     if(correct){localScore+=pts;db.ref('rooms/'+room+'/players/'+name+'/score').transaction(s=>(s||0)+pts);}
     showFB(i,q,pts,false);
     if(isHost)setTimeout(()=>nextQ(data.q),2500);
@@ -250,8 +379,7 @@ function showFB(chosen,q,pts,timed){
   document.getElementById('fb').innerHTML=`<div class="fb-box ${ok?'ok':'fail'}">
     <div class="fb-title">${timed?'⏰ Tiempo agotado':ok?'✅ Correcto — +'+pts+' puntos':'❌ Incorrecto'}</div>
     ${q.exp||''}
-  </div>
-  ${!isHost?`<div class="waiting-next"><span class="waiting-dot">⏳</span> Esperando al host...</div>`:''}`;
+  </div>${!isHost?`<div class="waiting-next"><span class="waiting-dot">⏳</span> Esperando al host...</div>`:''}`;
 }
 
 function nextQ(qIndex){db.ref('rooms/'+room+'/q').transaction(q=>q===qIndex?(q||0)+1:q);}
